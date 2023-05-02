@@ -47,7 +47,6 @@ int main(int argc, char* argv[])
     token1 = strtok(NULL, ":");
     char *ip1 = token1;
     token1 = strtok(NULL, ":");
-    printf("token1: %s\n", token1);
     int port1 = atoi(token1);
 
     printf("I am player index: %d, ip: %s, port: %d\n", index1, ip1, port1);
