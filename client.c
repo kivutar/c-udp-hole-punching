@@ -27,12 +27,12 @@ int main(int argc, char* argv[])
     addr_rdv.sin_port = htons(atoi(argv[2]));
     if (inet_aton(argv[1], &addr_rdv.sin_addr)==0)
         diep("aton");
-    
+
     sleep(1);
     if (sendto(rdv, "hi", 2, 0, (struct sockaddr*)(&addr_rdv), sizeof(addr_rdv)) == -1)
         diep("sendto");
 
-    printf("sent hi to %s:%d\n", argv[1], atoi(argv[2]));
+    printf("Sent hi to %s:%d\n", argv[1], atoi(argv[2]));
 
     // create a buffer buf to receive data
     char buf[64] = {0};
@@ -92,15 +92,15 @@ int main(int argc, char* argv[])
     // bind the socket to a port
     if (bind(p2p, (struct sockaddr*)(&addr_me), sizeof(addr_me)) == -1)
         diep("bind");
-    
+
     sleep(1);
     // send a hello message to the peer
     if (sendto(p2p, "hello", 5, 0, (struct sockaddr*)(&addr_peer), sizeof(addr_peer)) == -1)
         diep("sendto");
 
-    printf("sent hello to %s:%d\n", inet_ntoa(addr_peer.sin_addr), ntohs(addr_peer.sin_port));
+    printf("Sent hello to %s:%d\n", inet_ntoa(addr_peer.sin_addr), ntohs(addr_peer.sin_port));
 
-    // receive a message from the peer
+    // receive hello from the peer
     char buf2[64] = {0};
     if (recvfrom(p2p, &buf2, sizeof(buf), 0, (struct sockaddr*)(&addr_peer), &slen) == -1)
         diep("recvfrom");
@@ -111,8 +111,8 @@ int main(int argc, char* argv[])
     sleep(1);
     if (sendto(p2p, "hohai", 5, 0, (struct sockaddr*)(&addr_peer), sizeof(addr_peer)) == -1)
         diep("sendto");
-    
-    // receive a message from the peer
+
+    // receive hohai from the peer
     char buf3[64] = {0};
     if (recvfrom(p2p, &buf3, sizeof(buf), 0, (struct sockaddr*)(&addr_peer), &slen) == -1)
         diep("recvfrom");
