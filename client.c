@@ -13,6 +13,31 @@ void diep(char *s)
     exit(1);
 }
 
+char* receive_data(int s, struct sockaddr_in addr)
+{
+    int slen = sizeof(struct sockaddr_in);
+    char* buf = malloc(64 * sizeof(char));
+    memset(buf, 0, 64);
+
+    if (recvfrom(s, buf, 64 * sizeof(char), 0, (struct sockaddr*)(&addr), &slen) == -1)
+        diep("recvfrom");
+
+    printf("Received packet %s from %s:%d\n", buf, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+
+    return buf;
+}
+
+void send_data(int s, struct sockaddr_in addr, char* msg)
+{
+    int slen = sizeof(struct sockaddr_in);
+
+    sleep(1);
+    if (sendto(s, msg, strlen(msg), 0, (struct sockaddr*)(&addr), sizeof(addr)) == -1)
+        diep("sendto");
+
+    printf("Sent %s to %s:%d\n", msg, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+}
+
 int main(int argc, char* argv[])
 {
     struct sockaddr_in addr_me, addr_rdv, addr_peer;
@@ -28,18 +53,9 @@ int main(int argc, char* argv[])
     if (inet_aton(argv[1], &addr_rdv.sin_addr)==0)
         diep("aton");
 
-    sleep(1);
-    if (sendto(rdv, "hi", 2, 0, (struct sockaddr*)(&addr_rdv), sizeof(addr_rdv)) == -1)
-        diep("sendto");
+    send_data(rdv, addr_rdv, "hi");
 
-    printf("Sent hi to %s:%d\n", argv[1], atoi(argv[2]));
-
-    // create a buffer buf to receive data
-    char buf[64] = {0};
-    if (recvfrom(rdv, &buf, sizeof(buf), 0, (struct sockaddr*)(&addr_rdv), &slen) == -1)
-        diep("recvfrom");
-
-    printf("Received packet %s from %s:%d\n", &buf, inet_ntoa(addr_rdv.sin_addr), ntohs(addr_rdv.sin_port));
+    char* buf = receive_data(rdv, addr_rdv);
 
     // parse the received data, it contains the index, the ip, and the port, separated by a colon
     char *token1 = strtok(buf, ":");
@@ -51,16 +67,12 @@ int main(int argc, char* argv[])
 
     printf("I am player index: %d, ip: %s, port: %d\n", index1, ip1, port1);
 
-    char buf2[64] = {0};
-    if (recvfrom(rdv, &buf2, sizeof(buf2), 0, (struct sockaddr*)(&addr_rdv), &slen) == -1)
-        diep("recvfrom");
+    char* buf2 = receive_data(rdv, addr_rdv);
 
-    printf("Received packet %s from %s:%d\n", (char*)&buf2, inet_ntoa(addr_rdv.sin_addr), ntohs(addr_rdv.sin_port));
-
-    char *token2 = strtok(buf, ":");
+    char* token2 = strtok(buf2, ":");
     int index2 = atoi(token2);
     token2 = strtok(NULL, ":");
-    char *ip2 = token2;
+    char* ip2 = token2;
     token2 = strtok(NULL, ":");
     int port2 = atoi(token2);
 
@@ -78,12 +90,13 @@ int main(int argc, char* argv[])
     if ((p2p = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
         diep("socket");
 
+    // own address
     memset((char *) &addr_me, 0, sizeof(addr_me));
     addr_me.sin_family = AF_INET;
     addr_me.sin_port = htons(port1);
     addr_me.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    // address of the peer
+    // peer address
     memset((char *) &addr_peer, 0, sizeof(addr_peer));
     addr_peer.sin_family = AF_INET;
     addr_peer.sin_port = htons(port2);
@@ -94,29 +107,15 @@ int main(int argc, char* argv[])
     if (bind(p2p, (struct sockaddr*)(&addr_me), sizeof(addr_me)) == -1)
         diep("bind");
 
-    sleep(1);
-    // send a hello message to the peer
-    if (sendto(p2p, "hello", 5, 0, (struct sockaddr*)(&addr_peer), sizeof(addr_peer)) == -1)
-        diep("sendto");
-
-    printf("Sent hello to %s:%d\n", inet_ntoa(addr_peer.sin_addr), ntohs(addr_peer.sin_port));
+    // send hello to the peer
+    send_data(p2p, addr_peer, "hello");
 
     // receive hello from the peer
-    char buf3[64] = {0};
-    if (recvfrom(p2p, &buf3, sizeof(buf3), 0, (struct sockaddr*)(&addr_peer), &slen) == -1)
-        diep("recvfrom");
-
-    printf("Received packet %s from %s:%d\n", (char*)&buf3, inet_ntoa(addr_peer.sin_addr), ntohs(addr_peer.sin_port));
+    char* buf3 = receive_data(p2p, addr_peer);
 
     // send hohai to the peer
-    sleep(1);
-    if (sendto(p2p, "hohai", 5, 0, (struct sockaddr*)(&addr_peer), sizeof(addr_peer)) == -1)
-        diep("sendto");
+    send_data(p2p, addr_peer, "hohai");
 
     // receive hohai from the peer
-    char buf4[64] = {0};
-    if (recvfrom(p2p, &buf4, sizeof(buf4), 0, (struct sockaddr*)(&addr_peer), &slen) == -1)
-        diep("recvfrom");
-
-    printf("Received packet %s from %s:%d\n", (char*)&buf4, inet_ntoa(addr_peer.sin_addr), ntohs(addr_peer.sin_port));
+    char* buf4 = receive_data(p2p, addr_peer);
 }
