@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
     int p2p = 0;
     if ((p2p = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
         diep("socket");
-    
+
     memset((char *) &addr_me, 0, sizeof(addr_me));
     addr_me.sin_family = AF_INET;
     addr_me.sin_port = htons(port1);
@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
     if (recvfrom(p2p, &buf2, sizeof(buf), 0, (struct sockaddr*)(&addr_peer), &slen) == -1)
         diep("recvfrom");
 
-    printf("Received packet %s from %s:%d\n", &buf2, inet_ntoa(addr_peer.sin_addr), ntohs(addr_peer.sin_port));
+    printf("Received packet %s from %s:%d\n", (char*)&buf2, inet_ntoa(addr_peer.sin_addr), ntohs(addr_peer.sin_port));
 
     // send hohai to the peer
     sleep(1);
@@ -117,5 +117,5 @@ int main(int argc, char* argv[])
     if (recvfrom(p2p, &buf3, sizeof(buf), 0, (struct sockaddr*)(&addr_peer), &slen) == -1)
         diep("recvfrom");
 
-    printf("Received packet %s from %s:%d\n", &buf3, inet_ntoa(addr_peer.sin_addr), ntohs(addr_peer.sin_port));
+    printf("Received packet %s from %s:%d\n", (char*)&buf3, inet_ntoa(addr_peer.sin_addr), ntohs(addr_peer.sin_port));
 }
