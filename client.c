@@ -29,8 +29,6 @@ char* receive_data(int s, struct sockaddr_in addr)
 
 void send_data(int s, struct sockaddr_in addr, char* msg)
 {
-    int slen = sizeof(struct sockaddr_in);
-
     sleep(1);
     if (sendto(s, msg, strlen(msg), 0, (struct sockaddr*)(&addr), sizeof(addr)) == -1)
         diep("sendto");
